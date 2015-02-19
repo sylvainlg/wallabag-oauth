@@ -36,3 +36,6 @@
 # Data for wallabag
 data/assets/*
 data/db/poche*.sqlite
+
+# Sublime Text 
+*.sublime*

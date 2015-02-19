@@ -1,10 +1,10 @@
 # Learn more about services, parameters and containers at
 # http://symfony.com/doc/current/book/service_container.html
-parameters:
-    security.authentication.provider.dao.class: Wallabag\CoreBundle\Security\Authentication\Provider\WallabagAuthenticationProvider
-    security.encoder.digest.class: Wallabag\CoreBundle\Security\Authentication\Encoder\WallabagPasswordEncoder
+#parameters:
+#    security.authentication.provider.dao.class: Wallabag\CoreBundle\Security\Authentication\Provider\WallabagAuthenticationProvider
+#    security.encoder.digest.class: Wallabag\CoreBundle\Security\Authentication\Encoder\WallabagPasswordEncoder
 
-services:
+#services:
 #    service_name:
 #        class: AppBundle\Directory\ClassName
 #        arguments: ["@another_service_name", "plain_value", "%parameter_name%"]

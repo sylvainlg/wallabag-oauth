@@ -5,7 +5,7 @@ imports:
 
 framework:
     #esi:             ~
-    #translator:      { fallback: "%locale%" }
+    translator:      { fallback: "%locale%" }
     secret:          "%secret%"
     router:
         resource: "%kernel.root_dir%/config/routing.yml"
@@ -84,6 +84,18 @@ swiftmailer:
     username:  "%mailer_user%"
     password:  "%mailer_password%"
     spool:     { type: memory }
+
+fos_oauth_server:
+    db_driver: orm
+    client_class:        Wallabag\ApiBundle\Entity\Client
+    access_token_class:  Wallabag\ApiBundle\Entity\AccessToken
+    refresh_token_class: Wallabag\ApiBundle\Entity\RefreshToken
+    auth_code_class:     Wallabag\ApiBundle\Entity\AuthCode
+
+fos_user:
+    db_driver: orm
+    firewall_name: oauth_autorize
+    user_class: Wallabag\CoreBundle\Entity\User
 
 fos_rest:
     param_fetcher_listener: true

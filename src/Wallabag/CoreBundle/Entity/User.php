@@ -7,6 +7,8 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\AdvancedUserInterface;
 
+use FOS\UserBundle\Model\User as BaseUser;
+
 /**
  * User
  *
@@ -14,37 +16,22 @@ use Symfony\Component\Security\Core\User\AdvancedUserInterface;
  * @ORM\Entity
  * @ORM\HasLifecycleCallbacks()
  */
-class User implements AdvancedUserInterface, \Serializable
+class User extends BaseUser
 {
     /**
-     * @var integer
-     *
-     * @ORM\Column(name="id", type="integer")
      * @ORM\Id
+     * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="AUTO")
      */
-    private $id;
+    protected $id;
 
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="username", type="text")
-     */
-    private $username;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(type="string", length=32)
-     */
-    private $salt;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="password", type="text")
-     */
-    private $password;
+    public function __construct()
+    {
+        parent::__construct();
+        $this->isActive = true;
+        $this->salt     = md5(uniqid(null, true));
+        $this->entries  = new ArrayCollection();
+    }
 
     /**
      * @var string
@@ -54,42 +41,21 @@ class User implements AdvancedUserInterface, \Serializable
     private $name;
 
     /**
-     * @var string
-     *
-     * @ORM\Column(name="email", type="text", nullable=true)
-     */
-    private $email;
-
-    /**
-     * @ORM\Column(name="is_active", type="boolean")
-     */
-    private $isActive;
-
-    /**
      * @var date
      *
      * @ORM\Column(name="created_at", type="datetime")
      */
     private $createdAt;
-
     /**
      * @var date
      *
      * @ORM\Column(name="updated_at", type="datetime")
      */
     private $updatedAt;
-
     /**
      * @ORM\OneToMany(targetEntity="Entry", mappedBy="user", cascade={"remove"})
      */
     private $entries;
-
-    public function __construct()
-    {
-        $this->isActive = true;
-        $this->salt     = md5(uniqid(null, true));
-        $this->entries  = new ArrayCollection();
-    }
 
     /**
      * @ORM\PrePersist
@@ -100,132 +66,8 @@ class User implements AdvancedUserInterface, \Serializable
         if (is_null($this->createdAt)) {
             $this->createdAt = new \DateTime();
         }
-
         $this->updatedAt = new \DateTime();
     }
-
-    /**
-     * Get id
-     *
-     * @return integer
-     */
-    public function getId()
-    {
-        return $this->id;
-    }
-
-    /**
-     * Set username
-     *
-     * @param  string $username
-     * @return User
-     */
-    public function setUsername($username)
-    {
-        $this->username = $username;
-
-        return $this;
-    }
-
-    /**
-     * Get username
-     *
-     * @return string
-     */
-    public function getUsername()
-    {
-        return $this->username;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getSalt()
-    {
-        return $this->salt;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getRoles()
-    {
-        return array('ROLE_USER');
-    }
-
-    /**
-     * Set password
-     *
-     * @param  string $password
-     * @return User
-     */
-    public function setPassword($password)
-    {
-        if (!$password && 0 === strlen($password)) {
-            return;
-        }
-
-        $this->password = sha1($password.$this->getUsername().$this->getSalt());
-
-        return $this;
-    }
-
-    /**
-     * Get password
-     *
-     * @return string
-     */
-    public function getPassword()
-    {
-        return $this->password;
-    }
-
-    /**
-     * Set name
-     *
-     * @param  string $name
-     * @return User
-     */
-    public function setName($name)
-    {
-        $this->name = $name;
-
-        return $this;
-    }
-
-    /**
-     * Get name
-     *
-     * @return string
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
-
-    /**
-     * Set email
-     *
-     * @param  string $email
-     * @return User
-     */
-    public function setEmail($email)
-    {
-        $this->email = $email;
-
-        return $this;
-    }
-
-    /**
-     * Get email
-     *
-     * @return string
-     */
-    public function getEmail()
-    {
-        return $this->email;
-    }
-
     /**
      * @return string
      */
@@ -233,7 +75,6 @@ class User implements AdvancedUserInterface, \Serializable
     {
         return $this->createdAt;
     }
-
     /**
      * @return string
      */
@@ -241,7 +82,6 @@ class User implements AdvancedUserInterface, \Serializable
     {
         return $this->updatedAt;
     }
-
     /**
      * @param Entry $entry
      *
@@ -250,10 +90,8 @@ class User implements AdvancedUserInterface, \Serializable
     public function addEntry(Entry $entry)
     {
         $this->entries[] = $entry;
-
         return $this;
     }
-
     /**
      * @return ArrayCollection<Entry>
      */
@@ -261,7 +99,6 @@ class User implements AdvancedUserInterface, \Serializable
     {
         return $this->entries;
     }
-
     /**
      * @inheritDoc
      */
@@ -269,48 +106,6 @@ class User implements AdvancedUserInterface, \Serializable
     {
     }
 
-    /**
-     * @see \Serializable::serialize()
-     */
-    public function serialize()
-    {
-        return serialize(array(
-            $this->id,
-        ));
-    }
 
-    /**
-     * @see \Serializable::unserialize()
-     */
-    public function unserialize($serialized)
-    {
-        list(
-            $this->id,
-            ) = unserialize($serialized);
-    }
 
-    public function isEqualTo(UserInterface $user)
-    {
-        return $this->username === $user->getUsername();
-    }
-
-    public function isAccountNonExpired()
-    {
-        return true;
-    }
-
-    public function isAccountNonLocked()
-    {
-        return true;
-    }
-
-    public function isCredentialsNonExpired()
-    {
-        return true;
-    }
-
-    public function isEnabled()
-    {
-        return $this->isActive;
-    }
 }

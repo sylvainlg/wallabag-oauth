@@ -128,12 +128,24 @@ class InstallCommand extends ContainerAwareCommand
         $dialog = $this->getHelperSet()->get('dialog');
         $em = $this->getContainer()->get('doctrine.orm.entity_manager');
 
-        $user = new User();
-        $user->setUsername($dialog->ask($output, '<question>Username</question> <comment>(default: wallabag)</comment> :', 'wallabag'));
-        $user->setPassword($dialog->ask($output, '<question>Password</question> <comment>(default: wallabag)</comment> :', 'wallabag'));
-        $user->setEmail($dialog->ask($output, '<question>Email:</question>', ''));
+        $factory = $this->getContainer()->get('security.encoder_factory');
 
+        $user = new User();
+
+        $encoder = $factory->getEncoder($user);
+        #$user->setSalt(md5(time()));
+        $user->setUsername($dialog->ask($output, '<question>Username</question> <comment>(default: wallabag)</comment> :', 'wallabag'));
+        $pass = $encoder->encodePassword($dialog->ask($output, '<question>Password</question> <comment>(default: wallabag)</comment> :', 'wallabag'), $user->getSalt());
+        $user->setEmail($dialog->ask($output, '<question>Email:</question>', ''));
+        $user->setPassword($pass);
+        $user->setEnabled(true); //enable or disable
+        #$em = $this->getDoctrine()->getManager();
         $em->persist($user);
+        $em->flush();
+
+
+
+
 
         $pagerConfig = new UsersConfig();
         $pagerConfig->setUserId($user->getId());
@@ -141,6 +153,8 @@ class InstallCommand extends ContainerAwareCommand
         $pagerConfig->setValue(10);
 
         $em->persist($pagerConfig);
+
+
 
         // $languageConfig = new LanguageConfig();
         // $languageConfig->setUserId($user->getId());

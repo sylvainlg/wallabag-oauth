@@ -1,55 +1,83 @@
 security:
-    encoders:
-        Wallabag\CoreBundle\Entity\User:
-            algorithm:        sha1
-            encode_as_base64: false
-            iterations:       1
+    encoders: 
+        FOS\UserBundle\Model\UserInterface: sha512
+#    encoders:
+#        Wallabag\CoreBundle\Entity\User:
+#            algorithm:        sha1
+#            encode_as_base64: false
+#            iterations:       1
+
 
     role_hierarchy:
         ROLE_ADMIN:       ROLE_USER
         ROLE_SUPER_ADMIN: [ ROLE_USER, ROLE_ADMIN, ROLE_ALLOWED_TO_SWITCH ]
 
     providers:
-        administrators:
-            entity: { class: WallabagCoreBundle:User, property: username }
+#        administrators:
+#            entity: { class: WallabagCoreBundle:User, property: username }
+        user_provider:
+            id: fos_user.user_provider.username
 
     # the main part of the security, where you can set up firewalls
     # for specific sections of your app
     firewalls:
-        wsse_secured:
-            pattern:      /api/.*
-            wsse:         true
-            stateless:    true
-            anonymous:    true
-        login_firewall:
-            pattern:    ^/login$
-            anonymous:  ~
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+
+
+        oauth_token:
+            pattern: ^/oauth/v2/token
+            security: false
+
+        oauth_autorize:
+            pattern: ^/oauth/v2/auth
+            form_login: 
+                check_path: wallabag_oauth_server_auth_login_check
+                login_path: wallabag_oauth_server_auth_login
+                always_use_default_target_path : true
+                default_target_path: /
+                use_referer : true
+            logout: true
+            anonymous: true
+
+        api: 
+            pattern: ^/api/
+            fos_oauth: true
+            stateless: true
+
+        login:
+            pattern: ^/login$
+            anonymous: true
 
         secured_area:
             pattern:    ^/
             anonymous: ~
             form_login:
-                login_path:                     /login
+                provider: user_provider
+                csrf_provider: form.csrf_provider
 
-                use_forward:                    false
+#                login_path:                     /login
 
-                check_path:                     /login_check
+#                use_forward:                    false
 
-                post_only:                      true
+#                check_path:                     /login_check
 
-                always_use_default_target_path: true
-                default_target_path:            /
-                target_path_parameter:          redirect_url
-                use_referer:                    true
+#                post_only:                      true
 
-                failure_path:                   null
-                failure_forward:                false
+#                always_use_default_target_path: true
+#                default_target_path:            /
+#                target_path_parameter:          redirect_url
+#                use_referer:                    true
 
-                username_parameter:             _username
-                password_parameter:             _password
+                #failure_path:                   null
+                #failure_forward:                false
 
-                csrf_parameter:                 _csrf_token
-                intention:                      authenticate
+#                username_parameter:             _username
+#                password_parameter:             _password
+
+#                csrf_parameter:                 _csrf_token
+#                intention:                      authenticate
 
             logout:
                 path:   /logout
@@ -59,4 +87,7 @@ security:
         - { path: ^/api/salt, roles: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/api/doc, roles: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/register, role: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/resetting, role: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/api, roles: [ IS_AUTHENTICATED_FULLY ] }
         - { path: ^/, roles: ROLE_USER }

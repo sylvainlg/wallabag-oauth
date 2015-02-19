@@ -11,18 +11,39 @@ class SecurityController extends Controller
     public function loginAction(Request $request)
     {
         $session = $request->getSession();
-        // get the login error if there is one
+
         if ($request->attributes->has(SecurityContext::AUTHENTICATION_ERROR)) {
             $error = $request->attributes->get(SecurityContext::AUTHENTICATION_ERROR);
-        } else {
+        } elseif (null !== $session && $session->has(SecurityContext::AUTHENTICATION_ERROR)) {
             $error = $session->get(SecurityContext::AUTHENTICATION_ERROR);
             $session->remove(SecurityContext::AUTHENTICATION_ERROR);
+        } else {
+            $error = '';
         }
 
-        return $this->render('WallabagCoreBundle:Security:login.html.twig', array(
-            // last username entered by the user
-            'last_username' => $session->get(SecurityContext::LAST_USERNAME),
-            'error'         => $error,
-        ));
+        if ($error) {
+            $error = $error->getMessage(
+            ); // WARNING! Symfony source code identifies this line as a potential security threat.
+        }
+
+        $lastUsername = (null === $session) ? '' : $session->get(SecurityContext::LAST_USERNAME);
+
+        return $this->render(
+            'WallabagCoreBundle:Security:login.html.twig',
+            array(
+                'last_username' => $lastUsername,
+                'error' => $error,
+            )
+        );
     }
+
+    public function loginCheckAction(Request $request)
+    {
+        //return 'ok';
+
+        /*
+         * Bad credetials => varchar(100) for password field in db
+         */
+    }
+
 }
