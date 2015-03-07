@@ -79,16 +79,9 @@ class EntryController extends Controller
         $result = $client->call('/api/entries.json', 'GET');
         var_dump($result);*/
         $api = $this->get('api.service.request');
-        $api->setHeaders(array(
-                CURLOPT_COOKIESESSION=>$_COOKIE,
-            ));
         $token = $api->clientAuthentification();
-//echo "token\n"; var_dump($token);
-        $api->setAccessToken($token);
-        $entries = $api->get('/entries.json', array());
-
-//var_dump($_COOKIE);
-//var_dump($request->cookies);
+        $api->setAccessToken($token->access_token);
+        $entries = $api->get('/entries.json', array("user"=>$this->getUser()->getId()));
 
         #$entries = array();
         #$this->get('logger')->info(implode(',',$entries));

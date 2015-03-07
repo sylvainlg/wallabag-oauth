@@ -9,6 +9,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Wallabag\CoreBundle\Entity\Entry;
 use Wallabag\CoreBundle\Entity\Tag;
 use Wallabag\CoreBundle\Service\Extractor;
+use Wallabag\CoreBundle\Entity\User;
 
 class WallabagRestController extends Controller
 {
@@ -48,6 +49,7 @@ class WallabagRestController extends Controller
      *          {"name"="page", "dataType"="integer", "required"=false, "format"="default '1'", "description"="what page you want."},
      *          {"name"="perPage", "dataType"="integer", "required"=false, "format"="default'30'", "description"="results per page."},
      *          {"name"="tags", "dataType"="string", "required"=false, "format"="api%2Crest", "description"="a list of tags url encoded. Will returns entries that matches ALL tags."},
+     *          {"name"="user", "dataType"="string", "required"="true", "format"="username of the current user"}
      *       }
      * )
      * @return Entry
@@ -62,14 +64,26 @@ class WallabagRestController extends Controller
         $page       = $request->query->get('page', 1);
         $perPage    = $request->query->get('perPage', 30);
         $tags       = $request->query->get('tags', array());
-        //$user       = $request->query->get('user',-1);
+        $username   = $request->query->get('user',-1);
+
 $log = $this->get('logger');
-$log->info(implode(',',$_COOKIE));
-$log->info($this->getUser());
+$log->info("username : $username");
+
+        $em = $this->container->get('doctrine')->getEntityManager();
+        $user = $em->getRepository('WallabagCoreBundle:User')->find($username);
+
+
+$log->info($user);
+
+        if(!$user) {
+            $log->error("User not found $userID");
+            throw $this->createNotFoundException();
+        }
+
         $entries = $this
             ->getDoctrine()
             ->getRepository('WallabagCoreBundle:Entry')
-            ->findEntries($this->getUser()->getId(), $isArchived, $isStarred, $isDeleted, $sort, $order);
+            ->findEntries($user->getId(), $isArchived, $isStarred, $isDeleted, $sort, $order);
 
         if (!($entries)) {
             throw $this->createNotFoundException();

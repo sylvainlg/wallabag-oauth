@@ -71,10 +71,10 @@ class ApiRequester
             CURLOPT_PORT           => '8181',
         );
 
-        foreach($this->extraHeaders as $key => $value)
+        /*foreach($this->extraHeaders as $key => $value)
         {
             $curlOptions[$key] = $value;
-        }
+        }*/
 
         if (! empty($parameters) || ! empty($request)) {
             if (! empty($request)) {
@@ -89,7 +89,7 @@ class ApiRequester
         $response = curl_exec($curl);
 
 //var_dump($data);
-//var_dump(curl_getinfo($curl));
+var_dump(curl_getinfo($curl));
 
         $error = curl_error($curl);
         $this->lastRequestInfo = curl_getinfo($curl);
