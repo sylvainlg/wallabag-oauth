@@ -1,15 +1,72 @@
+parameters:
+  platform.entity.user.class: Wallabag\CoreBundle\Entity\User
+  platform.user.provider.class: Wallabag\CoreBundle\Provider\UserProvider
+  api.service.request.class: Wallabag\CoreBundle\Service\ApiRequester
+  adoy_oauth2.client.class: OAuth2\Client
+  api.service.client.class: Wallabag\CoreBundle\Service\OAuth2Client
+  api.service.client.rest.class: Wallabag\CoreBundle\Service\RestRequest
+
 services:
-    wallabag_core.twig.wallabag:
-        class: Wallabag\CoreBundle\Twig\Extension\WallabagExtension
-        tags:
-            - { name: twig.extension }
-#    wsse.security.authentication.provider:
-#        class: Wallabag\CoreBundle\Security\Authentication\Provider\WsseProvider
-#        public: false
-#        arguments: ['', '%kernel.cache_dir%/security/nonces']
-#    wsse.security.authentication.listener:
-#        class: Wallabag\CoreBundle\Security\Firewall\WsseListener
-#        public: false
-#        tags:
-#            - { name: monolog.logger, channel: wsse }
-#        arguments: ['@security.context', '@security.authentication.manager', '@logger']
+
+  wallabag_core.twig.wallabag:
+    class: Wallabag\CoreBundle\Twig\Extension\WallabagExtension
+    tags:
+      - { name: twig.extension }
+
+  platform.user.manager:
+    class: Doctrine\ORM\EntityManager
+    factory_service: doctrine
+    factory_method: getManagerForClass
+    arguments:
+      - "%platform.entity.user.class%"
+
+  platform.user.repository:
+    class: Wallabag\CoreBundle\Repository\UserRepository
+    factory_service: platform.user.manager
+    factory_method: getRepository
+    arguments:
+      - "%platform.entity.user.class%"
+
+  platform.user.provider:
+    class: "%platform.user.provider.class%"
+    arguments:
+      - @platform.user.repository
+
+  api.service.request:
+    class: "%api.service.request.class%"
+    arguments:
+      - "%oauth2_base_url%"
+      - "%oauth2_client_id%"
+      - "%oauth2_client_secret%"
+
+  adoy_oauth2.client:
+    class: "%adoy_oauth2.client.class%"
+    arguments:
+      - "%oauth2_client_id%"
+      - "%oauth2_client_secret%"
+#      - "2"
+
+  api.service.client.credentials_client:
+    class: "%api.service.client.class%"
+    arguments:
+      - "@adoy_oauth2.client"
+      - "%oauth2_auth_endpoint%"
+      - "%oauth2_token_endpoint%"
+      - "%oauth2_redirect_url%"
+      - "client_credentials"
+      - { client_id: "%oauth2_client_id%", client_secret: "%oauth2_client_secret%" }
+
+  api.service.client.authorize_client:
+    class: "%api.service.client.class%"
+    arguments:
+      - "@adoy_oauth2.client"
+      - "%oauth2_auth_endpoint%"
+      - "%oauth2_token_endpoint%"
+      - "%oauth2_redirect_url%"
+      - "authorization_code"
+      - {redirect_uri: "%oauth2_redirect_url%"}
+
+  api.service.client.rest:
+    class: "%api.service.client.rest.class%"
+    arguments:
+      - { token_url: "%oauth2_token_endpoint%", client_id: "%oauth2_client_id%", client_secret: "%oauth2_client_secret%" }

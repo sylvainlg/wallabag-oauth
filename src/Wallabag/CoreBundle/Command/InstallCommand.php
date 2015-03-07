@@ -7,6 +7,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Wallabag\CoreBundle\Entity\User;
 use Wallabag\CoreBundle\Entity\UsersConfig;
+use Symfony\Component\Yaml\Yaml;
 
 class InstallCommand extends ContainerAwareCommand
 {
@@ -77,8 +78,11 @@ class InstallCommand extends ContainerAwareCommand
         // }
 
         $output->writeln('');
-        $output->writeln('<info>Administration setup.</info>');
 
+        $output->writeln('<info>API setup</info>');
+        $this->setupAPI($output);
+
+        $output->writeln('<info>Administration setup.</info>');
         $this->setupAdmin($output);
 
         $output->writeln('');
@@ -164,6 +168,48 @@ class InstallCommand extends ContainerAwareCommand
         // $em->persist($languageConfig);
 
         $em->flush();
+    }
+
+    protected function setupAPI($output)
+    {
+        $dialog = $this->getHelperSet()->get('dialog');
+
+        $clientManager = $this->getContainer()->get('fos_oauth_server.client_manager.default');
+        $client = $clientManager->createClient();
+        $baseUrl = rtrim($dialog->ask($output, '<question>Base URL</question> <comment>(default:)</comment> :', ''),'/');
+        $client->setRedirectUris(array($baseUrl.'/authorize'));
+        $grantTypes = explode(',',$dialog->ask($output, '<question>Grant types comma separed</question> <comment>(default: token)</comment> :', 'token'));
+        $client->setAllowedGrantTypes($grantTypes);
+        $clientManager->updateClient($client);
+
+/*
+    oauth2_client_id: 1_85tvwbovb8wskc4kg4oco08o08w4kkscc4s48oco80kck88c8
+    oauth2_client_secret: 4c20p9zsn7eocsss4gw88ko0wkk8cggswsg4ssccwoo8cwso8k
+    oauth2_redirect_url: http://192.168.1.22:8080/authorize
+    oauth2_auth_endpoint: http://192.168.1.22:8080/oauth/v2/auth
+    oauth2_token_endpoint: http://192.168.1.22:8080/oauth/v2/token
+*/
+
+        $conf = array('parameters' =>
+                array(
+                    'oauth2_base_url'=>$baseUrl,
+                    'oauth2_client_id'=>$client->getPublicId(),
+                    'oauth2_client_secret'=>$client->getSecret(),
+                    'oauth2_redirect_url'=>$baseUrl . '/authorize',
+                    'oauth2_auth_endpoint'=>$baseUrl . '/oauth/v2/auth',
+                    'oauth2_token_endpoint'=>$baseUrl . '/oauth/v2/token',
+                ),
+            );
+        file_put_contents($this->getContainer()->get('kernel')->getRootDir() . '/config/api.yml', Yaml::dump($conf));
+
+        $output->writeln(
+            sprintf(
+                'Added a new client with public id <info>%s</info>, secret <info>%s</info>',
+                $client->getPublicId(),
+                $client->getSecret()
+            )
+        );
+
     }
 
     protected function runCommand($command, InputInterface $input, OutputInterface $output)

@@ -2,6 +2,7 @@ imports:
     - { resource: parameters.yml }
     - { resource: security.yml }
     - { resource: services.yml }
+    - { resource: api.yml, ignore_errors: true }
 
 framework:
     #esi:             ~

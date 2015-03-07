@@ -1,0 +1,8 @@
+parameters:
+    base_url: 'http://192.168.1.22:8181'
+    oauth2_base_url: 'http://192.168.1.22:8181'
+    oauth2_client_id: 1_42rsse3ollycw8w0co8c8c0soc4gk0wso080s884808wg4gwko
+    oauth2_client_secret: 55gxhvppnickcco4kw8sw4cww0k4wgck0c00sc008skwgokkgg
+    oauth2_redirect_url: 'http://192.168.1.22:8181/authorize'
+    oauth2_auth_endpoint: 'http://192.168.1.22:8181/oauth/v2/auth'
+    oauth2_token_endpoint: 'http://192.168.1.22:8181/oauth/v2/token'

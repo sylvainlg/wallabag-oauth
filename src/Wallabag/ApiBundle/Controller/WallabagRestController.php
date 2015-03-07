@@ -62,7 +62,10 @@ class WallabagRestController extends Controller
         $page       = $request->query->get('page', 1);
         $perPage    = $request->query->get('perPage', 30);
         $tags       = $request->query->get('tags', array());
-
+        //$user       = $request->query->get('user',-1);
+$log = $this->get('logger');
+$log->info(implode(',',$_COOKIE));
+$log->info($this->getUser());
         $entries = $this
             ->getDoctrine()
             ->getRepository('WallabagCoreBundle:Entry')
